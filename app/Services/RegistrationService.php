@@ -2,8 +2,9 @@
 
 namespace App\Services;
 
+use App\Http\Requests\StoreRegistrationRequest;
+use App\Models\History;
 use App\Models\Registration;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class RegistrationService
@@ -13,12 +14,9 @@ class RegistrationService
         return Registration::create($data);
     }
 
-    public function create(Request $request)
+    public function create(StoreRegistrationRequest $request)
     {
-        $validated = $request->validate([
-            'username' => 'required|string|max:255',
-            'phonenumber' => 'required|string|max:255',
-        ]);
+        $validated = $request->validated();
 
         $validated['unique_code'] = Str::random(10);
 
@@ -29,7 +27,7 @@ class RegistrationService
     {
         $registration = Registration::where('unique_code', $uniqueCode)->firstOrFail();
 
-        if ($registration->created_at->addDays(7)->isPast() || !$registration->is_active) {
+        if ($registration->created_at->addDays(7)->isPast() || ! $registration->is_active) {
             throw new \Exception('Page expired or deactivated');
         }
 
@@ -56,7 +54,7 @@ class RegistrationService
     {
         $registration = Registration::where('unique_code', $uniqueCode)->firstOrFail();
 
-        if ($registration->created_at->addDays(7)->isPast() || !$registration->is_active) {
+        if ($registration->created_at->addDays(7)->isPast() || ! $registration->is_active) {
             throw new \Exception('Page expired or deactivated');
         }
 
@@ -76,7 +74,7 @@ class RegistrationService
             }
         }
 
-        \App\Models\History::create([
+        History::create([
             'registration_id' => $registration->id,
             'random_number' => $number,
             'is_win' => $isWin,
