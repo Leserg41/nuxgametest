@@ -8,19 +8,26 @@ use App\Models\Registration;
 
 class RegistrationController extends Controller
 {
+    private RegistrationService $service;
+
+    public function __construct()
+    {
+        $this->service = new RegistrationService();
+    }
+
     public function index()
     {
         return view('registration');
     }
 
-    public function store(Request $request, RegistrationService $service)
+    public function store(Request $request)
     {
-        $registration = $service->create($request);
+        $registration = $this->service->create($request);
 
         return redirect('/registration/' . $registration->unique_code)->with('success', 'Registration successful!');
     }
 
-    public function show($uniqueCode)
+    public function show(string $uniqueCode)
     {
         $registration = Registration::where('unique_code', $uniqueCode)->firstOrFail();
 
@@ -34,30 +41,30 @@ class RegistrationController extends Controller
         return view('page_a', compact('registration', 'history', 'showHistory'));
     }
 
-    public function regenerate($uniqueCode, RegistrationService $service)
+    public function regenerate(string $uniqueCode)
     {
         try {
-            $newCode = $service->regenerate($uniqueCode);
+            $newCode = $this->service->regenerate($uniqueCode);
             return redirect('/registration/' . $newCode)->with('success', 'Unique number regenerated!');
         } catch (\Exception $e) {
             abort(404);
         }
     }
 
-    public function deactivate($uniqueCode, RegistrationService $service)
+    public function deactivate(string $uniqueCode)
     {
         try {
-            $service->deactivate($uniqueCode);
+            $this->service->deactivate($uniqueCode);
             return redirect('/')->with('success', 'Registration deactivated!');
         } catch (\Exception $e) {
             abort(404);
         }
     }
 
-    public function lucky($uniqueCode, RegistrationService $service)
+    public function lucky(string $uniqueCode)
     {
         try {
-            $result = $service->lucky($uniqueCode);
+            $result = $this->service->lucky($uniqueCode);
             $message = 'Number: ' . $result['number'] . ' - ' . ($result['isWin'] ? 'Win! Sum: ' . $result['winSum'] : 'Lost');
             return redirect('/registration/' . $uniqueCode)->with('lucky', $message);
         } catch (\Exception $e) {
@@ -65,7 +72,7 @@ class RegistrationController extends Controller
         }
     }
 
-    public function history($uniqueCode)
+    public function history(string $uniqueCode)
     {
         $registration = Registration::where('unique_code', $uniqueCode)->firstOrFail();
 
