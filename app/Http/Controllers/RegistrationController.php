@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreRegistrationRequest;
 use App\Models\Registration;
 use App\Services\RegistrationService;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 
 class RegistrationController extends Controller
 {
@@ -15,19 +17,19 @@ class RegistrationController extends Controller
         $this->service = new RegistrationService;
     }
 
-    public function index()
+    public function index(): View
     {
         return view('registration');
     }
 
-    public function store(StoreRegistrationRequest $request)
+    public function store(StoreRegistrationRequest $request): RedirectResponse
     {
         $registration = $this->service->create($request);
 
         return redirect('/registration/'.$registration->unique_code)->with('success', 'Registration successful!');
     }
 
-    public function show(string $uniqueCode)
+    public function show(string $uniqueCode): View
     {
         $registration = Registration::where('unique_code', $uniqueCode)->firstOrFail();
 
@@ -41,7 +43,7 @@ class RegistrationController extends Controller
         return view('page_a', compact('registration', 'history', 'showHistory'));
     }
 
-    public function regenerate(string $uniqueCode)
+    public function regenerate(string $uniqueCode): RedirectResponse
     {
         try {
             $newCode = $this->service->regenerate($uniqueCode);
@@ -52,7 +54,7 @@ class RegistrationController extends Controller
         }
     }
 
-    public function deactivate(string $uniqueCode)
+    public function deactivate(string $uniqueCode): RedirectResponse
     {
         try {
             $this->service->deactivate($uniqueCode);
@@ -63,7 +65,7 @@ class RegistrationController extends Controller
         }
     }
 
-    public function lucky(string $uniqueCode)
+    public function lucky(string $uniqueCode): RedirectResponse
     {
         try {
             $result = $this->service->lucky($uniqueCode);
@@ -75,7 +77,7 @@ class RegistrationController extends Controller
         }
     }
 
-    public function history(string $uniqueCode)
+    public function history(string $uniqueCode): View
     {
         $registration = Registration::where('unique_code', $uniqueCode)->firstOrFail();
 

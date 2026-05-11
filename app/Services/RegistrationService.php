@@ -9,12 +9,34 @@ use Illuminate\Support\Str;
 
 class RegistrationService
 {
-    public function createWithData(array $data)
+    private const LUCKY_NUMBER_MIN = 0;
+
+    private const LUCKY_NUMBER_MAX = 1000;
+
+    private const WIN_DIVISOR = 2;
+
+    private const WIN_REMAINDER = 0;
+
+    private const TOP_PRIZE_THRESHOLD = 900;
+
+    private const HIGH_PRIZE_THRESHOLD = 600;
+
+    private const MEDIUM_PRIZE_THRESHOLD = 300;
+
+    private const TOP_PRIZE_MULTIPLIER = 0.7;
+
+    private const HIGH_PRIZE_MULTIPLIER = 0.5;
+
+    private const MEDIUM_PRIZE_MULTIPLIER = 0.3;
+
+    private const LOW_PRIZE_MULTIPLIER = 0.1;
+
+    public function createWithData(array $data): Registration
     {
         return Registration::create($data);
     }
 
-    public function create(StoreRegistrationRequest $request)
+    public function create(StoreRegistrationRequest $request): Registration
     {
         $validated = $request->validated();
 
@@ -23,7 +45,7 @@ class RegistrationService
         return $this->createWithData($validated);
     }
 
-    public function regenerate($uniqueCode)
+    public function regenerate(string $uniqueCode): string
     {
         $registration = Registration::where('unique_code', $uniqueCode)->firstOrFail();
 
@@ -37,7 +59,7 @@ class RegistrationService
         return $newCode;
     }
 
-    public function deactivate($uniqueCode)
+    public function deactivate(string $uniqueCode): bool
     {
         $registration = Registration::where('unique_code', $uniqueCode)->firstOrFail();
 
@@ -50,7 +72,7 @@ class RegistrationService
         return true;
     }
 
-    public function lucky($uniqueCode)
+    public function lucky(string $uniqueCode): array
     {
         $registration = Registration::where('unique_code', $uniqueCode)->firstOrFail();
 
@@ -58,19 +80,19 @@ class RegistrationService
             throw new \Exception('Page expired or deactivated');
         }
 
-        $number = rand(0, 1000);
-        $isWin = $number % 2 == 0;
+        $number = rand(self::LUCKY_NUMBER_MIN, self::LUCKY_NUMBER_MAX);
+        $isWin = $number % self::WIN_DIVISOR == self::WIN_REMAINDER;
         $winSum = null;
 
         if ($isWin) {
-            if ($number > 900) {
-                $winSum = $number * 0.7;
-            } elseif ($number > 600) {
-                $winSum = $number * 0.5;
-            } elseif ($number > 300) {
-                $winSum = $number * 0.3;
+            if ($number > self::TOP_PRIZE_THRESHOLD) {
+                $winSum = $number * self::TOP_PRIZE_MULTIPLIER;
+            } elseif ($number > self::HIGH_PRIZE_THRESHOLD) {
+                $winSum = $number * self::HIGH_PRIZE_MULTIPLIER;
+            } elseif ($number > self::MEDIUM_PRIZE_THRESHOLD) {
+                $winSum = $number * self::MEDIUM_PRIZE_MULTIPLIER;
             } else {
-                $winSum = $number * 0.1;
+                $winSum = $number * self::LOW_PRIZE_MULTIPLIER;
             }
         }
 
